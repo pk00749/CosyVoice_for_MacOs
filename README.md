@@ -9,17 +9,19 @@ Hope anyone using MacOS can run up as well!
 
 For `SenseVoice`, visit [SenseVoice repo](https://github.com/FunAudioLLM/SenseVoice) and [SenseVoice space](https://www.modelscope.cn/studios/iic/SenseVoice).
 
-## Install
+## Installation
 
 **References**
 - https://blog.zhheo.com/p/e950.html
 - https://www.soinside.com/question/KrTV2VQsaKq4v5YQyMkFba
 - https://geek-docs.com/pytorch/pytorch-questions/277_pytorch_cannot_import_torch_audio_no_audio_backend_is_available.html
 
+
 **Something to be installed on MacOS**
 ```sh
 brew install sox git-lfs
 ```
+
 
 **Clone and install**
 - Clone the repo
@@ -30,20 +32,27 @@ cd CosyVoice_for_MacOs
 git submodule update --init --recursive
 ```
 
-- Install Conda: please see https://docs.conda.io/en/latest/miniconda.html
-- Create Conda env:
 
+**Create Conda environment**  
+Install MiniConda, please see https://docs.conda.io/en/latest/miniconda.html
+
+Create and activate virtual environment
 ``` sh
 conda create -n cosyvoice python=3.8
 conda activate cosyvoice
+```
+
+Install Python libraries
+```sh
 pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host=mirrors.aliyun.com
 ```
 
-**Check torch related version**
 
+**Check torch related version**
 ``` sh
 python check_version.py
 ```
+
 
 **Check audio backend**
 ```sh
@@ -52,29 +61,27 @@ python check_backend.py
 If return empty list, means not able to proceed audio.
 Solution I used is, uninstall sox, librosa, soundfile, torch, torchaudio, torchvision, then reinstall them with version.
 ```sh
-pip install sox librosa soundfile
-pip install torch torchaudio torchvision
+pip uninstall sox librosa soundfile
+pip uninstall torch torchaudio torchvision
 ```
 
 
-**Model download**
+**Model download**  
 Create folder
 ```sh
 mkdir -p pretrained_models
 ```
-We strongly recommand that you download our pretrained `CosyVoice-300M` `CosyVoice-300M-SFT` `CosyVoice-300M-Instruct` model and `speech_kantts_ttsfrd` resource.
+Strongly recommand that run below to download our pretrained `CosyVoice-300M` `CosyVoice-300M-SFT` `CosyVoice-300M-Instruct` model and `speech_kantts_ttsfrd` resource.
 
 > If you are expert in this field, and you are only interested in training your own CosyVoice model from scratch, you can skip this step.
-
 
 ```sh
 python download_models.py
 ```
 
 
-**Basic Usage**
-
-- First and important, add `third_party/AcademiCodec` and `third_party/Matcha-TTS` to `PYTHONPATH`:
+**Basic Usage**  
+First and important, add `third_party/AcademiCodec` and `third_party/Matcha-TTS` to `PYTHONPATH`:
 ``` sh
 export PYTHONPATH=third_party/AcademiCodec;third_party/Matcha-TTS
 ```
@@ -112,8 +119,7 @@ torchaudio.save('./output/cross_lingual.wav', output['tts_speech'], 22050)
 #torchaudio.save('./output/instruct.wav', output['tts_speech'], 22050)
 ```
 
-**Start web demo**
-
+**Start Web demo**  
 You can use our web demo page to get familiar with CosyVoice quickly.
 We support sft/zero_shot/cross_lingual/instruct inference in web demo.
 
@@ -144,13 +150,11 @@ url接口地址: http://localhost:9880/?text=测试测试，这里是测试&spea
 ```
 
 
-**Advanced Usage**
-
+**Advanced Usage**  
 For advanced user, we have provided train and inference scripts in `examples/libritts/cosyvoice/run.sh`.
 You can get familiar with CosyVoice following this recipie.
 
-**Build for deployment**
-
+**Build for deployment**  
 Optionally, if you want to use grpc for service deployment,
 you can run following steps. Otherwise, you can just ignore this step.
 
