@@ -1,20 +1,4 @@
-# 启动接口服务
-
-python3 api.py
-
-```
-url接口地址: http://localhost:9880/?text=测试测试，这里是测试&speaker=中文女
-```
-
-```
-字幕文件地址:http://localhost:9880/file/output.srt
-```
-
-```
-音频文件地址:http://localhost:9880/file/output.wav
-```
-
-# CosyVoice
+# CosyVoice installed MacOS
 ## 👉🏻 [CosyVoice Demos](https://fun-audio-llm.github.io/) 👈🏻
 [[CosyVoice Paper](https://fun-audio-llm.github.io/pdf/CosyVoice_v1.pdf)][[CosyVoice Studio](https://www.modelscope.cn/studios/iic/CosyVoice-300M)][[CosyVoice Code](https://github.com/FunAudioLLM/CosyVoice)]
 
@@ -128,11 +112,29 @@ We support sft/zero_shot/cross_lingual/instruct inference in web demo.
 
 Please see the demo website for details.
 
-``` python
+``` sh
 # change speech_tts/CosyVoice-300M-SFT for sft inference, or speech_tts/CosyVoice-300M-Instruct for instruct inference
 python3 webui.py --port 9886 --model_dir ./pretrained_models/CosyVoice-300M
 ```
 ![PixPin_2024-07-07_15-00-18](https://github.com/v3ucn/CosyVoice_For_Windows/assets/1288038/7c6fa726-050a-4d54-9973-fe8c6a284ef3)
+
+
+**Start API demo**
+```sh
+python3 api.py
+```
+
+```
+url接口地址: http://localhost:9880/?text=测试测试，这里是测试&speaker=中文女
+```
+
+```
+字幕文件地址:http://localhost:9880/file/output.srt
+```
+
+```
+音频文件地址:http://localhost:9880/file/output.wav
+```
 
 
 **Advanced Usage**
