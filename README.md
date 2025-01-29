@@ -1,4 +1,9 @@
 # CosyVoice installed MacOS
+According to official repo [FunAudioLLM/CosyVoice](https://github.com/FunAudioLLM/CosyVoice) and [v3ucn/CosyVoice_for_MacOs](https://github.com/v3ucn/CosyVoice_for_MacOs), list out troubles solved via Internet and update this document after I run it on MacOS successfully.  
+Hope anyone using MacOS can run up as well!
+
+
+
 ## 👉🏻 [CosyVoice Demos](https://fun-audio-llm.github.io/) 👈🏻
 [[CosyVoice Paper](https://fun-audio-llm.github.io/pdf/CosyVoice_v1.pdf)][[CosyVoice Studio](https://www.modelscope.cn/studios/iic/CosyVoice-300M)][[CosyVoice Code](https://github.com/FunAudioLLM/CosyVoice)]
 
@@ -78,6 +83,8 @@ export PYTHONPATH=third_party/AcademiCodec;third_party/Matcha-TTS
 - For zero_shot/cross_lingual inference, please use `CosyVoice-300M` model.
 - For sft inference, please use `CosyVoice-300M-SFT` model.
 - For instruct inference, please use `CosyVoice-300M-Instruct` model.
+
+Copy below or directly run **sample.py**
 ``` python
 from cosyvoice.cli.cosyvoice import CosyVoice
 from cosyvoice.utils.file_utils import load_wav
