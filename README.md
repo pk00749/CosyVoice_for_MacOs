@@ -22,13 +22,22 @@ For `SenseVoice`, visit [SenseVoice repo](https://github.com/FunAudioLLM/SenseVo
 
 ## Install
 
-**Clone and install**
+**References**
+- https://blog.zhheo.com/p/e950.html
+- https://www.soinside.com/question/KrTV2VQsaKq4v5YQyMkFba
+- https://geek-docs.com/pytorch/pytorch-questions/277_pytorch_cannot_import_torch_audio_no_audio_backend_is_available.html
 
+**Something to be installed on MacOS**
+```sh
+brew install sox git-lfs
+```
+
+**Clone and install**
 - Clone the repo
 ``` sh
-git clone --recursive https://github.com/v3ucn/CosyVoice_For_Windows.git
+git clone https://github.com/v3ucn/CosyVoice_for_MacOs.git
 # If you failed to clone submodule due to network failures, please run following command until success
-cd CosyVoice_For_Windows
+cd CosyVoice_for_MacOs
 git submodule update --init --recursive
 ```
 
@@ -36,54 +45,55 @@ git submodule update --init --recursive
 - Create Conda env:
 
 ``` sh
-conda create -n cosyvoice python=3.11
+conda create -n cosyvoice python=3.8
 conda activate cosyvoice
 pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host=mirrors.aliyun.com
-
-install deepspeed from https://github.com/S95Sedan/Deepspeed-Windows/releases/tag/v14.0%2Bpy311
-
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-
-# when you in windows
-no need to install sox 
 ```
 
-**Model download**
-
-We strongly recommand that you download our pretrained `CosyVoice-300M` `CosyVoice-300M-SFT` `CosyVoice-300M-Instruct` model and `speech_kantts_ttsfrd` resource.
-
-If you are expert in this field, and you are only interested in training your own CosyVoice model from scratch, you can skip this step.
-
-``` python
-# SDK模型下载
-from modelscope import snapshot_download
-snapshot_download('iic/CosyVoice-300M', local_dir='pretrained_models/CosyVoice-300M')
-snapshot_download('iic/CosyVoice-300M-SFT', local_dir='pretrained_models/CosyVoice-300M-SFT')
-snapshot_download('iic/CosyVoice-300M-Instruct', local_dir='pretrained_models/CosyVoice-300M-Instruct')
-snapshot_download('speech_tts/speech_kantts_ttsfrd', local_dir='pretrained_models/speech_kantts_ttsfrd')
-```
+**Check torch related version**
 
 ``` sh
-# git模型下载，请确保已安装git lfs
+python check_version.py
+```
+
+**Check audio backend**
+```sh
+python check_backend.py
+```
+If return empty list, means not able to proceed audio.
+Solution I used is, uninstall sox, librosa, soundfile, torch, torchaudio, torchvision, then reinstall them with version.
+```sh
+pip install sox librosa soundfile
+pip install torch torchaudio torchvision
+```
+
+
+**Model download**
+Create folder
+```sh
 mkdir -p pretrained_models
-git clone https://www.modelscope.cn/iic/CosyVoice-300M.git pretrained_models/CosyVoice-300M
-git clone https://www.modelscope.cn/iic/CosyVoice-300M-SFT.git pretrained_models/CosyVoice-300M-SFT
-git clone https://www.modelscope.cn/iic/CosyVoice-300M-Instruct.git pretrained_models/CosyVoice-300M-Instruct
-git clone https://www.modelscope.cn/speech_tts/speech_kantts_ttsfrd.git pretrained_models/speech_kantts_ttsfrd
+```
+We strongly recommand that you download our pretrained `CosyVoice-300M` `CosyVoice-300M-SFT` `CosyVoice-300M-Instruct` model and `speech_kantts_ttsfrd` resource.
+
+> If you are expert in this field, and you are only interested in training your own CosyVoice model from scratch, you can skip this step.
+
+
+```sh
+python download_models.py
 ```
 
 
 **Basic Usage**
 
-For zero_shot/cross_lingual inference, please use `CosyVoice-300M` model.
-For sft inference, please use `CosyVoice-300M-SFT` model.
-For instruct inference, please use `CosyVoice-300M-Instruct` model.
-First, add `third_party/AcademiCodec` and `third_party/Matcha-TTS` to your `PYTHONPATH`.
-
+- First and important, add `third_party/AcademiCodec` and `third_party/Matcha-TTS` to `PYTHONPATH`:
 ``` sh
-set PYTHONPATH=third_party/AcademiCodec;third_party/Matcha-TTS
+export PYTHONPATH=third_party/AcademiCodec;third_party/Matcha-TTS
 ```
 
+**Sample**
+- For zero_shot/cross_lingual inference, please use `CosyVoice-300M` model.
+- For sft inference, please use `CosyVoice-300M-SFT` model.
+- For instruct inference, please use `CosyVoice-300M-Instruct` model.
 ``` python
 from cosyvoice.cli.cosyvoice import CosyVoice
 from cosyvoice.utils.file_utils import load_wav
@@ -92,23 +102,23 @@ import torchaudio
 cosyvoice = CosyVoice('speech_tts/CosyVoice-300M-SFT')
 # sft usage
 print(cosyvoice.list_avaliable_spks())
-output = cosyvoice.inference_sft('你好，我是通义生成式语音大模型，请问有什么可以帮您的吗？', '中文女')
-torchaudio.save('sft.wav', output['tts_speech'], 22050)
+output = cosyvoice.inference_sft('你好，我是通义生成式语音大模型，请问有什么可以帮您的吗？', '中文女', '无')
+torchaudio.save('./output/sft.wav', output['tts_speech'], 22050)
 
 cosyvoice = CosyVoice('speech_tts/CosyVoice-300M')
 # zero_shot usage
-prompt_speech_16k = load_wav('zero_shot_prompt.wav', 16000)
+prompt_speech_16k = load_wav('./asset/zero_shot_prompt.wav', 16000)
 output = cosyvoice.inference_zero_shot('收到好友从远方寄来的生日礼物，那份意外的惊喜与深深的祝福让我心中充满了甜蜜的快乐，笑容如花儿般绽放。', '希望你以后能够做的比我还好呦。', prompt_speech_16k)
-torchaudio.save('zero_shot.wav', output['tts_speech'], 22050)
+torchaudio.save('./output/zero_shot.wav', output['tts_speech'], 22050)
 # cross_lingual usage
-prompt_speech_16k = load_wav('cross_lingual_prompt.wav', 16000)
+prompt_speech_16k = load_wav('./asset/cross_lingual_prompt.wav', 16000)
 output = cosyvoice.inference_cross_lingual('<|en|>And then later on, fully acquiring that company. So keeping management in line, interest in line with the asset that\'s coming into the family is a reason why sometimes we don\'t buy the whole thing.', prompt_speech_16k)
-torchaudio.save('cross_lingual.wav', output['tts_speech'], 22050)
+torchaudio.save('./output/cross_lingual.wav', output['tts_speech'], 22050)
 
-cosyvoice = CosyVoice('speech_tts/CosyVoice-300M-Instruct')
-# instruct usage
-output = cosyvoice.inference_instruct('在面对挑战时，他展现了非凡的<strong>勇气</strong>与<strong>智慧</strong>。', '中文男', 'Theo \'Crimson\', is a fiery, passionate rebel leader. Fights with fervor for justice, but struggles with impulsiveness.')
-torchaudio.save('instruct.wav', output['tts_speech'], 22050)
+#cosyvoice = CosyVoice('speech_tts/CosyVoice-300M-Instruct')
+## instruct usage
+#output = cosyvoice.inference_instruct('在面对挑战时，他展现了非凡的<strong>勇气</strong>与<strong>智慧</strong>。', '中文男', 'Theo \'Crimson\', is a fiery, passionate rebel leader. Fights with fervor for justice, but struggles with impulsiveness.','无')
+#torchaudio.save('./output/instruct.wav', output['tts_speech'], 22050)
 ```
 
 **Start web demo**
@@ -142,6 +152,24 @@ docker build -t cosyvoice:v1.0 .
 docker run -d --runtime=nvidia -p 50000:50000 cosyvoice:v1.0 /bin/bash -c "cd /opt/CosyVoice/CosyVoice/runtime/python && python3 server.py --port 50000 --max_conc 4 --model_dir speech_tts/CosyVoice-300M && sleep infinity"
 python3 client.py --port 50000 --mode <sft|zero_shot|cross_lingual|instruct>
 ```
+
+## Trouble shooting
+
+- ImportError: There is no such entity as cosyvoice.utils.common.ras_sampling  
+
+Reference: https://github.com/FunAudioLLM/CosyVoice/issues/325  
+Solution: 
+Locate model folder, such as pretrained_models/CosyVoice-300M, edit cosyvoice.yaml and comment below content:
+```yaml
+    #sampling: !name:cosyvoice.utils.common.ras_sampling
+    #    top_p: 0.8
+    #    top_k: 25
+    #    win_size: 10
+    #    tau_r: 0.1
+```
+
+- RuntimeError: Couldn't find appropriate backend to handle uri /Users/yorkhxli/git/CosyVoice_for_MacOs/音频输出/output.wav and format None  
+Solution: Due to no any audio backend, plese refer to **Check audio backend**
 
 ## Discussion & Communication
 
