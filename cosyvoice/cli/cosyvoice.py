@@ -6,6 +6,7 @@ import torchaudio
 from hyperpyyaml import load_hyperpyyaml
 from .frontend import CosyVoiceFrontEnd
 from .model import CosyVoiceModel
+from cosyvoice.utils.class_utils import get_model_type
 import time
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -36,24 +37,11 @@ def ms_to_srt_time(ms):
 class CosyVoice:
 
     def __init__(self, model_dir):
-
-        model_dir = f"{ROOT_DIR}/pretrained_models/CosyVoice-300M"
         instruct = True if '-Instruct' in model_dir else False
-        self.model_dir = model_dir
-
-
-        with open(f'{ROOT_DIR}/pretrained_models/CosyVoice-300M/cosyvoice.yaml', 'r') as f:
+        self.model_dir = f"{ROOT_DIR}/{model_dir}"
+        with open(f'{self.model_dir}/cosyvoice.yaml', 'r') as f:
             configs = load_hyperpyyaml(f)
-
-        # configs = torch.load(f'{ROOT_DIR}/config.pt')
-        #print(configs["llm"])
-
-        # del configs["llm"]
-        # del configs["flow"]
-        # del configs["hift"]
-
-        #torch.save(configs,'config.pt')
-
+        # assert get_model_type(configs) != CosyVoice2Model, 'do not use {} for CosyVoice initialization!'.format(model_dir)
         self.frontend = CosyVoiceFrontEnd(configs['get_tokenizer'],
                                           configs['feat_extractor'],
                                           '{}/campplus.onnx'.format(model_dir),
@@ -68,68 +56,12 @@ class CosyVoice:
         del configs
 
     def list_avaliable_spks(self):
-        # print(self.frontend.spk2info)
-        # with open(r'./spk2info.txt', 'a',encoding='utf-8') as f:
-        #     f.write(str(self.frontend.spk2info))
         spks = list(self.frontend.spk2info.keys())
         return spks
 
-    def inference_sft_stream(self, tts_text, spk_id,new_dropdown):
-        if new_dropdown != "无":
-            spk_id = "中文女"
-        tts_speeches = []
-
-        joblist = self.frontend.text_normalize_stream(tts_text, split=True)
-        
-        for i in joblist:
-            
-            # model_input = self.frontend.frontend_sft(i, spk_id)
-            #print(model_input)
-            print(i)
-            # with open(r'srt_model_input.txt', 'a',encoding='utf-8') as f:
-            #     f.write(str(model_input))
-            # if new_dropdown != "无":
-            #     # 加载数据
-            #     print(new_dropdown)
-            #     print("读取pt")
-            #     newspk = torch.load(f'./voices/{new_dropdown}.pt')
-            #     # with open(f'./voices/{new_dropdown}.py','r',encoding='utf-8') as f:
-            #     #     newspk = f.read()
-            #     #     newspk = eval(newspk)
-            #     model_input["flow_embedding"] = newspk["flow_embedding"]
-            #     model_input["llm_embedding"] = newspk["llm_embedding"]
-
-            #     model_input["llm_prompt_speech_token"] = newspk["llm_prompt_speech_token"]
-            #     model_input["llm_prompt_speech_token_len"] = newspk["llm_prompt_speech_token_len"]
-
-            #     model_input["flow_prompt_speech_token"] = newspk["flow_prompt_speech_token"]
-            #     model_input["flow_prompt_speech_token_len"] = newspk["flow_prompt_speech_token_len"]
-
-            #     model_input["prompt_speech_feat_len"] = newspk["prompt_speech_feat_len"]
-            #     model_input["prompt_speech_feat"] = newspk["prompt_speech_feat"]
-            #     model_input["prompt_text"] = newspk["prompt_text"]
-            #     model_input["prompt_text_len"] = newspk["prompt_text_len"]
-
-            # model_output = next(self.model.inference_stream(**model_input))
-            # # print(model_input)
-            # tts_speeches.append(model_output['tts_speech'])
-            # print(tts_speeches)
-            yield i
-            # try:
-            #     model_output = next(self.model.inference_stream(**model_input))
-            #     print(f"Model output: {model_output}")
-            #     tts_speeches.append(model_output['tts_speech'])
-            #     # yield torch.concat(tts_speeches, dim=1)
-            # except StopIteration:
-            #     print("Inference stream ended.")
-            #     break
-            # except Exception as e:
-            #     print(f"Error during inference: {e}")
-            #     break
-
-
     @time_it
-    def inference_sft(self, tts_text, spk_id,new_dropdown,spk_mix="无",w1=0.5,w2=0.5,token_max_n=30,token_min_n=20,merge_len=15):
+    def inference_sft(self, tts_text, spk_id, new_dropdown, spk_mix="无",
+                        w1=0.5, w2=0.5, token_max_n=30, token_min_n=20, merge_len=15):
         default_voices = ['中文女', '中文男', '日语男', '粤语女', '英文女', '英文男', '韩语女']
 
         # if new_dropdown != "无":
@@ -157,28 +89,19 @@ class CosyVoice:
 
                 newspk = torch.load(f'{ROOT_DIR}/voices/{new_dropdown}.pt', map_location=torch.device('cpu'))
 
-                
-
                 if spk_mix != "无":
-
                     print("融合音色:",spk_mix)
-                    
                     if spk_mix not in ["中文女","中文男","中文男","日语男","粤语女","粤语女","英文女","英文男","韩语女"]:
-
                         newspk_1 = torch.load(f'{ROOT_DIR}/voices/{spk_mix}.pt', map_location=torch.device('cpu'))
                     else:
                         newspk_1 = self.frontend.frontend_sft(i, spk_mix)
 
-
-
                     model_input["flow_embedding"] = (newspk["flow_embedding"] * w1) + (newspk_1["flow_embedding"] * w2)
                     # model_input["llm_embedding"] = (newspk["llm_embedding"] * w1) + (newspk_1["llm_embedding"] * w2)
-
                 else:
 
                     model_input["flow_embedding"] = newspk["flow_embedding"] 
                     model_input["llm_embedding"] = newspk["llm_embedding"]
-
 
                 # with open(f'./voices/{new_dropdown}.py','r',encoding='utf-8') as f:
                 #     newspk = f.read()
@@ -214,11 +137,8 @@ class CosyVoice:
 
             srtlines.append(f"{len(audio_opt):02d}\n")
             srtlines.append(srtline_begin+' --> '+srtline_end+"\n")
-
             srtlines.append(i.replace("、。","")+"\n\n")
 
-            
-            
             tts_speeches.append(model_output['tts_speech'])
 
         print(tts_speeches)
@@ -260,7 +180,6 @@ class CosyVoice:
         return {'tts_speech': torch.concat(tts_speeches, dim=1)}
 
     def inference_instruct(self, tts_text, spk_id, instruct_text,new_dropdown):
-
         if new_dropdown != "无":
             spk_id = "中文女"
 
@@ -269,7 +188,6 @@ class CosyVoice:
         instruct_text = self.frontend.text_normalize_instruct(instruct_text, split=False)
         tts_speeches = []
 
-    
         for i in self.frontend.text_normalize_instruct(tts_text, split=True):
             model_input = self.frontend.frontend_instruct(i, spk_id, instruct_text)
 
