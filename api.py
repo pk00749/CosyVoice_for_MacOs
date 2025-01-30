@@ -4,24 +4,19 @@ import io, os, sys
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append('{}/third_party/AcademiCodec'.format(ROOT_DIR))
 sys.path.append('{}/third_party/Matcha-TTS'.format(ROOT_DIR))
-
 import numpy as np
 from flask import Flask, request, Response,send_from_directory
 import torch
 import torchaudio
-
 from cosyvoice.cli.cosyvoice import CosyVoice
 from cosyvoice.utils.file_utils import load_wav
 import torchaudio
 import ffmpeg
-
 from flask_cors import CORS
 from flask import make_response
-
 import json
 
 cosyvoice = CosyVoice('pretrained_models/CosyVoice-300M')
-
 default_voices = ['中文女', '中文男', '日语男', '粤语女', '英文女', '英文男', '韩语女']
 
 spk_new = []
@@ -36,7 +31,6 @@ print("自定义音色",spk_new)
 app = Flask(__name__)
 
 CORS(app, cors_allowed_origins="*")
-
 CORS(app, supports_credentials=True)
 
 
@@ -44,7 +38,6 @@ def speed_change(input_audio: np.ndarray, speed: float, sr: int):
     # 检查输入数据类型和声道数
     if input_audio.dtype != np.int16:
         raise ValueError("输入音频数据类型必须为 np.int16")
-
 
     # 转换为字节流
     raw_audio = input_audio.astype(np.int16).tobytes()
@@ -78,7 +71,6 @@ def sft_post():
     speed = request.args.get('speed',1.0)
     speed = float(speed)
     
-
     if not text:
         return {"error": "文本不能为空"}, 400
 
@@ -87,7 +79,6 @@ def sft_post():
 
     # 非流式
     if streaming == 0:
-
         start = time.process_time()
         output = cosyvoice.inference_sft(text,speaker,speaker)
         end = time.process_time()
@@ -112,7 +103,6 @@ def sft_post():
 
     # 流式模式
     else:
-
         spk_id = speaker
 
         if new:
@@ -121,7 +111,6 @@ def sft_post():
         joblist = cosyvoice.frontend.text_normalize_stream(text, split=True)
 
         def generate():
-        
             for i in joblist:
                 print(i)
                 print("流式0")
@@ -216,16 +205,13 @@ def sft_get():
 
     # 流式模式
     else:
-
         spk_id = speaker
-
         if new:
             spk_id = "中文女"
 
         joblist = cosyvoice.frontend.text_normalize_stream(text, split=True)
 
         def generate():
-        
             for i in joblist:
                 print(i)
                 print("流式0")
@@ -278,15 +264,9 @@ def sft_get():
         
         # return Response(generate(), mimetype='audio/x-wav')
 
-                
-
-
-
-
 
 @app.route("/tts_to_audio/", methods=['POST'])
 def tts_to_audio():
-
     import speaker_config
     
     question_data = request.get_json()
@@ -297,7 +277,6 @@ def tts_to_audio():
 
     speed = speaker_config.speed
     
-
     if not text:
         return {"error": "文本不能为空"}, 400
 
@@ -329,7 +308,6 @@ def tts_to_audio():
     return Response(buffer.read(), mimetype="audio/wav")
 
 
-
 @app.route("/speakers", methods=['GET'])
 def speakers():
 
@@ -354,10 +332,8 @@ def speakers():
 def uploaded_file(filename):
     return send_from_directory("音频输出", filename)
 
-
 @app.route("/speakers_list", methods=['GET'])
 def speakers_list():
-
     response = app.response_class(
         response=json.dumps(["female_calm","female","male"]),
         status=200,
