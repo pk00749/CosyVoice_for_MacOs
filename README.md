@@ -83,7 +83,7 @@ python download_models.py
 **Basic Usage**  
 First and important, add `third_party/AcademiCodec` and `third_party/Matcha-TTS` to `PYTHONPATH`:
 ``` sh
-export PYTHONPATH=third_party/AcademiCodec;third_party/Matcha-TTS
+export PYTHONPATH=third_party/AcademiCodec:third_party/Matcha-TTS
 ```
 
 **Sample**
