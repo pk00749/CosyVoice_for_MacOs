@@ -1,9 +1,6 @@
 
 import time
 import io, os, sys
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append('{}/third_party/AcademiCodec'.format(ROOT_DIR))
-sys.path.append('{}/third_party/Matcha-TTS'.format(ROOT_DIR))
 import numpy as np
 from flask import Flask, request, Response,send_from_directory
 import torch
@@ -16,20 +13,23 @@ from flask_cors import CORS
 from flask import make_response
 import json
 
+# set environemnt variable
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append('{}/third_party/AcademiCodec'.format(ROOT_DIR))
+sys.path.append('{}/third_party/Matcha-TTS'.format(ROOT_DIR))
+
 cosyvoice = CosyVoice('pretrained_models/CosyVoice-300M')
+print("默认音色",cosyvoice.list_avaliable_spks())
+
 default_voices = ['中文女', '中文男', '日语男', '粤语女', '英文女', '英文男', '韩语女']
 
 spk_new = []
-
 for name in os.listdir(f"{ROOT_DIR}/voices/"):
     print(name.replace(".py",""))
     spk_new.append(name.replace(".py",""))
-
-print("默认音色",cosyvoice.list_avaliable_spks())
 print("自定义音色",spk_new)
 
 app = Flask(__name__)
-
 CORS(app, cors_allowed_origins="*")
 CORS(app, supports_credentials=True)
 
@@ -180,7 +180,6 @@ def sft_get():
 
     # 非流式
     if streaming == 0:
-
         start = time.process_time()
         output = cosyvoice.inference_sft(text,speaker,speaker)
         end = time.process_time()
@@ -310,7 +309,6 @@ def tts_to_audio():
 
 @app.route("/speakers", methods=['GET'])
 def speakers():
-
     voices = []
 
     for x in default_voices:
