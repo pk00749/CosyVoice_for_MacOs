@@ -29,7 +29,7 @@ if [ ! -d "$data" ]; then
 fi
 
 part_ok=false
-list="dev-clean test-clean dev-other test-other train-clean-100 train-clean-360 train-other-500"
+list="dev_set test_set train_set"
 for x in $list; do
   if [ "$part" == $x ]; then part_ok=true; fi
 done
@@ -43,17 +43,17 @@ if [ -z "$url" ]; then
   exit 1
 fi
 
-if [ -f $data/LibriTTS/$part/.complete ]; then
+if [ -f $data/.$part.complete ]; then
   echo "$0: data part $part was already successfully extracted, nothing to do."
   exit 0
 fi
 
 
 # sizes of the archive files in bytes.  This is some older versions.
-sizes_old="371012589 347390293 379743611 361838298 6420417880 23082659865 30626749128"
+sizes_old="1035537823 2201936013 52627842921"
 # sizes_new is the archive file sizes of the final release.  Some of these sizes are of
 # things we probably won't download.
-sizes_new="337926286 314305928 695964615 297279345 87960560420 33373768 346663984 328757843 6387309499 23049477885 30593501606"
+sizes_new="3886385"
 
 if [ -f $data/$part.tar.gz ]; then
   size=$(/bin/ls -l $data/$part.tar.gz | awk '{print $5}')
@@ -87,7 +87,7 @@ if ! tar -C $data -xvzf $data/$part.tar.gz; then
   exit 1
 fi
 
-touch $data/LibriTTS/$part/.complete
+touch $data/.$part.complete
 
 echo "$0: Successfully downloaded and un-tarred $data/$part.tar.gz"
 
