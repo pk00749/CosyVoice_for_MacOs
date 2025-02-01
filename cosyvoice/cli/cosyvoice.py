@@ -6,7 +6,7 @@ import torchaudio
 from hyperpyyaml import load_hyperpyyaml
 from .frontend import CosyVoiceFrontEnd
 from .model import CosyVoiceModel
-from cosyvoice.utils.class_utils import get_model_type
+# from cosyvoice.utils.class_utils import get_model_type
 import time
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -71,22 +71,15 @@ class CosyVoice:
         audio_samples = 0
         srtlines = []
         for i in self.frontend.text_normalize(tts_text,True,token_max_n,token_min_n,merge_len):
-            if spk_id not in default_voices:
-                back_spk_id = "中文女"
-            else:
-                back_spk_id = spk_id
-            model_input = self.frontend.frontend_sft(i, back_spk_id)
-            #print(model_input)
             print(i)
-            # with open(r'srt_model_input.txt', 'a',encoding='utf-8') as f:
-            #     f.write(str(model_input))
+            spk_id = spk_id if spk_id in default_voices else "中文女"
+            model_input = self.frontend.frontend_sft(i, spk_id)
+
             if new_dropdown != "无" or spk_id not in default_voices:
                 if spk_id not in default_voices:
                     new_dropdown = spk_id
                 # 加载数据
-                print(new_dropdown)
-                print("读取pt")
-
+                print(f"读取pt:{new_dropdown}")
                 newspk = torch.load(f'{ROOT_DIR}/voices/{new_dropdown}.pt', map_location=torch.device('cpu'))
 
                 if spk_mix != "无":
@@ -99,15 +92,8 @@ class CosyVoice:
                     model_input["flow_embedding"] = (newspk["flow_embedding"] * w1) + (newspk_1["flow_embedding"] * w2)
                     # model_input["llm_embedding"] = (newspk["llm_embedding"] * w1) + (newspk_1["llm_embedding"] * w2)
                 else:
-
                     model_input["flow_embedding"] = newspk["flow_embedding"] 
                     model_input["llm_embedding"] = newspk["llm_embedding"]
-
-                # with open(f'./voices/{new_dropdown}.py','r',encoding='utf-8') as f:
-                #     newspk = f.read()
-                #     newspk = eval(newspk)
-                # model_input["flow_embedding"] = newspk["flow_embedding"] * 0.1 + newspk_1["flow_embedding"] * 0.9
-                # model_input["llm_embedding"] = newspk["llm_embedding"] * 0.1 + newspk_1["llm_embedding"] * 0.9
 
                 model_input["llm_prompt_speech_token"] = newspk["llm_prompt_speech_token"]
                 model_input["llm_prompt_speech_token_len"] = newspk["llm_prompt_speech_token_len"]
@@ -121,8 +107,6 @@ class CosyVoice:
                 model_input["prompt_text_len"] = newspk["prompt_text_len"]
 
             model_output = self.model.inference(**model_input)
-            # print(model_input)
-
             print(model_output['tts_speech'])
 
             # 使用 .numpy() 方法将 tensor 转换为 numpy 数组
