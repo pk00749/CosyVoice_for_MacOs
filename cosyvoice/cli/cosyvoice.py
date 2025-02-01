@@ -132,6 +132,7 @@ class CosyVoice:
 
         return {'tts_speech':audio_data}
 
+    @time_it
     def inference_zero_shot(self, tts_text, prompt_text, prompt_speech_16k):
         prompt_text = self.frontend.text_normalize(prompt_text, split=False)
         tts_speeches = []
@@ -144,6 +145,7 @@ class CosyVoice:
 
         return {'tts_speech': torch.concat(tts_speeches, dim=1)}
 
+    @time_it
     def inference_cross_lingual(self, tts_text, prompt_speech_16k):
         if self.frontend.instruct is True:
             raise ValueError('{} do not support cross_lingual inference'.format(self.model_dir))
@@ -155,6 +157,7 @@ class CosyVoice:
 
         return {'tts_speech': torch.concat(tts_speeches, dim=1)}
 
+    @time_it
     def inference_instruct(self, tts_text, spk_id, instruct_text,new_dropdown):
         if new_dropdown != "无":
             spk_id = "中文女"
