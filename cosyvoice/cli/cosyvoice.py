@@ -127,9 +127,7 @@ class CosyVoice:
 
         print(tts_speeches)
         audio_data = torch.concat(tts_speeches, dim=1)
-
-        torchaudio.save(f"{ROOT_DIR}/音频输出/output.wav", audio_data, 22050)
-        with open(f'{ROOT_DIR}/音频输出/output.srt', 'w', encoding='utf-8') as f:
+        with open(f'{ROOT_DIR}/音频输出/output_sft.srt', 'w', encoding='utf-8') as f:
             f.writelines(srtlines)
 
         return {'tts_speech':audio_data}
@@ -139,14 +137,8 @@ class CosyVoice:
         tts_speeches = []
         for i in self.frontend.text_normalize(tts_text, split=True):
             model_input = self.frontend.frontend_zero_shot(i, prompt_text, prompt_speech_16k)
-            # save_input = {}
-            # save_input["flow_embedding"] = model_input["flow_embedding"]
-            # save_input["llm_embedding"] = model_input["llm_embedding"]
-            # with open(r'./output.py', 'w',encoding='utf-8') as f:
-            #     f.write(str(model_input))
-
             # 保存数据
-            torch.save(model_input, f'{ROOT_DIR}/output.pt') 
+            torch.save(model_input, f'{ROOT_DIR}/output_zero_shot.pt') 
             model_output = self.model.inference(**model_input)
             tts_speeches.append(model_output['tts_speech'])
 
@@ -177,12 +169,8 @@ class CosyVoice:
 
             if new_dropdown != "无":
                 # 加载数据
-                print(new_dropdown)
-                print("读取pt")
+                print(f"读取pt:{new_dropdown}")
                 newspk = torch.load(f'{ROOT_DIR}/voices/{new_dropdown}.pt')
-                # with open(f'./voices/{new_dropdown}.py','r',encoding='utf-8') as f:
-                #     newspk = f.read()
-                #     newspk = eval(newspk)
                 model_input["flow_embedding"] = newspk["flow_embedding"]
                 model_input["llm_embedding"] = newspk["llm_embedding"]
 
