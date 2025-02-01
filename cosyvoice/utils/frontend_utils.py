@@ -1,8 +1,21 @@
-#!/usr/bin/env python
-#coding=utf-8
+# Copyright (c) 2024 Alibaba Inc (authors: Xiang Lyu, Zhihao Du)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import re
+import regex
 chinese_char_pattern = re.compile(r'[\u4e00-\u9fff]+')
+
 
 # whether contain chinese character
 def contains_chinese(text):
@@ -49,7 +62,7 @@ def spell_out_number(text: str, inflect_parser):
 # 1. per sentence max len token_max_n, min len token_min_n, merge if last sentence len less than merge_len
 # 2. cal sentence len according to lang
 # 3. split sentence according to puncatation
-def split_paragraph(text: str, tokenize, lang="zh", token_max_n=60, token_min_n=40, merge_len=15, comma_split=False):
+def split_paragraph(text: str, tokenize, lang="zh", token_max_n=80, token_min_n=60, merge_len=20, comma_split=False):
     def calc_utt_length(_text: str):
         if lang == "zh":
             return len(_text)
@@ -63,11 +76,18 @@ def split_paragraph(text: str, tokenize, lang="zh", token_max_n=60, token_min_n=
             return len(tokenize(_text)) < merge_len
 
     if lang == "zh":
-        pounc = ['。', '？', '！', '；', '：', '.', '?', '!', ';']
+        pounc = ['。', '？', '！', '；', '：', '、', '.', '?', '!', ';']
     else:
         pounc = ['.', '?', '!', ';', ':']
     if comma_split:
         pounc.extend(['，', ','])
+
+    if text[-1] not in pounc:
+        if lang == "zh":
+            text += "。"
+        else:
+            text += "."
+
     st = 0
     utts = []
     for i, c in enumerate(text):
@@ -80,6 +100,7 @@ def split_paragraph(text: str, tokenize, lang="zh", token_max_n=60, token_min_n=
                 st = i + 2
             else:
                 st = i + 1
+
     final_utts = []
     cur_utt = ""
     for utt in utts:
@@ -92,8 +113,6 @@ def split_paragraph(text: str, tokenize, lang="zh", token_max_n=60, token_min_n=
             final_utts[-1] = final_utts[-1] + cur_utt
         else:
             final_utts.append(cur_utt)
-
-    print(final_utts)
 
     return final_utts
 
@@ -109,3 +128,9 @@ def replace_blank(text: str):
         else:
             out_str.append(c)
     return "".join(out_str)
+
+
+def is_only_punctuation(text):
+    # Regular expression: Match strings that consist only of punctuation marks or are empty.
+    punctuation_pattern = r'^[\p{P}\p{S}]*$'
+    return bool(regex.fullmatch(punctuation_pattern, text))

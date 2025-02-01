@@ -13,9 +13,75 @@
 # limitations under the License.
 import torch
 import torch.nn as nn
+# import torch.nn.functional as F
 from einops import pack, rearrange, repeat
+# from cosyvoice.utils.common import mask_to_bias
+# from cosyvoice.utils.mask import add_optional_chunk_mask
 from matcha.models.components.decoder import SinusoidalPosEmb, Block1D, ResnetBlock1D, Downsample1D, TimestepEmbedding, Upsample1D
 from matcha.models.components.transformer import BasicTransformerBlock
+
+
+# class Transpose(torch.nn.Module):
+#     def __init__(self, dim0: int, dim1: int):
+#         super().__init__()
+#         self.dim0 = dim0
+#         self.dim1 = dim1
+
+#     def forward(self, x: torch.Tensor):
+#         x = torch.transpose(x, self.dim0, self.dim1)
+#         return x
+
+
+# class CausalBlock1D(Block1D):
+#     def __init__(self, dim: int, dim_out: int):
+#         super(CausalBlock1D, self).__init__(dim, dim_out)
+#         self.block = torch.nn.Sequential(
+#             CausalConv1d(dim, dim_out, 3),
+#             Transpose(1, 2),
+#             nn.LayerNorm(dim_out),
+#             Transpose(1, 2),
+#             nn.Mish(),
+#         )
+
+#     def forward(self, x: torch.Tensor, mask: torch.Tensor):
+#         output = self.block(x * mask)
+#         return output * mask
+
+
+# class CausalResnetBlock1D(ResnetBlock1D):
+#     def __init__(self, dim: int, dim_out: int, time_emb_dim: int, groups: int = 8):
+#         super(CausalResnetBlock1D, self).__init__(dim, dim_out, time_emb_dim, groups)
+#         self.block1 = CausalBlock1D(dim, dim_out)
+#         self.block2 = CausalBlock1D(dim_out, dim_out)
+
+
+# class CausalConv1d(torch.nn.Conv1d):
+#     def __init__(
+#         self,
+#         in_channels: int,
+#         out_channels: int,
+#         kernel_size: int,
+#         stride: int = 1,
+#         dilation: int = 1,
+#         groups: int = 1,
+#         bias: bool = True,
+#         padding_mode: str = 'zeros',
+#         device=None,
+#         dtype=None
+#     ) -> None:
+#         super(CausalConv1d, self).__init__(in_channels, out_channels,
+#                                            kernel_size, stride,
+#                                            padding=0, dilation=dilation,
+#                                            groups=groups, bias=bias,
+#                                            padding_mode=padding_mode,
+#                                            device=device, dtype=dtype)
+#         assert stride == 1
+#         self.causal_padding = (kernel_size - 1, 0)
+
+#     def forward(self, x: torch.Tensor):
+#         x = F.pad(x, self.causal_padding)
+#         x = super(CausalConv1d, self).forward(x)
+#         return x
 
 
 class ConditionalDecoder(nn.Module):
@@ -74,7 +140,7 @@ class ConditionalDecoder(nn.Module):
             )
             self.down_blocks.append(nn.ModuleList([resnet, transformer_blocks, downsample]))
 
-        for i in range(num_mid_blocks):
+        for _ in range(num_mid_blocks):
             input_channel = channels[-1]
             out_channels = channels[-1]
             resnet = ResnetBlock1D(dim=input_channel, dim_out=output_channel, time_emb_dim=time_embed_dim)
@@ -126,7 +192,6 @@ class ConditionalDecoder(nn.Module):
         self.final_proj = nn.Conv1d(channels[-1], self.out_channels, 1)
         self.initialize_weights()
 
-
     def initialize_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Conv1d):
@@ -177,6 +242,8 @@ class ConditionalDecoder(nn.Module):
             x = resnet(x, mask_down, t)
             x = rearrange(x, "b c t -> b t c").contiguous()
             attn_mask = torch.matmul(mask_down.transpose(1, 2).contiguous(), mask_down)
+            # attn_mask = add_optional_chunk_mask(x, mask_down.bool(), False, False, 0, self.static_chunk_size, -1)
+            # attn_mask = mask_to_bias(attn_mask == 1, x.dtype)
             for transformer_block in transformer_blocks:
                 x = transformer_block(
                     hidden_states=x,
@@ -194,6 +261,8 @@ class ConditionalDecoder(nn.Module):
             x = resnet(x, mask_mid, t)
             x = rearrange(x, "b c t -> b t c").contiguous()
             attn_mask = torch.matmul(mask_mid.transpose(1, 2).contiguous(), mask_mid)
+            # attn_mask = add_optional_chunk_mask(x, mask_mid.bool(), False, False, 0, self.static_chunk_size, -1)
+            # attn_mask = mask_to_bias(attn_mask == 1, x.dtype)
             for transformer_block in transformer_blocks:
                 x = transformer_block(
                     hidden_states=x,
@@ -209,6 +278,8 @@ class ConditionalDecoder(nn.Module):
             x = resnet(x, mask_up, t)
             x = rearrange(x, "b c t -> b t c").contiguous()
             attn_mask = torch.matmul(mask_up.transpose(1, 2).contiguous(), mask_up)
+            # attn_mask = add_optional_chunk_mask(x, mask_up.bool(), False, False, 0, self.static_chunk_size, -1)
+            # attn_mask = mask_to_bias(attn_mask == 1, x.dtype)
             for transformer_block in transformer_blocks:
                 x = transformer_block(
                     hidden_states=x,
