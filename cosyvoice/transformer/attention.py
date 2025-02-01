@@ -222,7 +222,7 @@ class RelPositionMultiHeadedAttention(MultiHeadedAttention):
         torch.nn.init.xavier_uniform_(self.pos_bias_u)
         torch.nn.init.xavier_uniform_(self.pos_bias_v)
 
-    def rel_shift(self, x):
+    def rel_shift(self, x: torch.Tensor) -> torch.Tensor:
         """Compute relative positional encoding.
 
         Args:
