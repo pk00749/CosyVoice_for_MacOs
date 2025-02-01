@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Dict, Optional, Callable, List, Generator
+from typing import Dict, Optional, Union, Callable, List, Generator
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -21,6 +21,7 @@ from cosyvoice.utils.common import IGNORE_ID
 from cosyvoice.transformer.label_smoothing_loss import LabelSmoothingLoss
 from cosyvoice.utils.common import th_accuracy
 from cosyvoice.utils.file_utils import logging
+from torch.cuda.amp import autocast
 
 
 class TransformerLM(nn.Module):
@@ -133,7 +134,7 @@ class TransformerLM(nn.Module):
                 acc = th_accuracy(logits.view(-1, self.speech_token_size + 1), lm_target, ignore_label=IGNORE_ID)
         return {'loss': loss, 'acc': acc}
 
-    def sampling_ids(self, weighted_scores: torch.Tensor, sampling: int, ignore_eos: bool = True):
+    def sampling_ids(self, weighted_scores: torch.Tensor, sampling: Union[bool, int, float] = True, beam_size: int = 1, ignore_eos: bool = True):
         # num_trials, max_trials = 0, 100
         while True:
             prob, indices = weighted_scores.softmax(dim=-1).topk(sampling)
