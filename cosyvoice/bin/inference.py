@@ -1,5 +1,16 @@
-#!/usr/bin/env python
-#coding=utf-8
+# Copyright (c) 2024 Alibaba Inc (authors: Xiang Lyu)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from __future__ import print_function
 
@@ -7,15 +18,14 @@ import argparse
 import logging
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
 import os
-
 import torch
 from torch.utils.data import DataLoader
 import torchaudio
 from hyperpyyaml import load_hyperpyyaml
 from tqdm import tqdm
 from cosyvoice.cli.model import CosyVoiceModel
-
 from cosyvoice.dataset.dataset import Dataset
+
 
 def get_args():
     parser = argparse.ArgumentParser(description='inference with your model')
@@ -55,7 +65,8 @@ def main():
     model = CosyVoiceModel(configs['llm'], configs['flow'], configs['hift'])
     model.load(args.llm_model, args.flow_model, args.hifigan_model)
 
-    test_dataset = Dataset(args.prompt_data, data_pipeline=configs['data_pipeline'], mode='inference', shuffle=False, partition=False, tts_file=args.tts_text, prompt_utt2data=args.prompt_utt2data)
+    test_dataset = Dataset(args.prompt_data, data_pipeline=configs['data_pipeline'], mode='inference', shuffle=False, partition=False,
+                           tts_file=args.tts_text, prompt_utt2data=args.prompt_utt2data)
     test_data_loader = DataLoader(test_dataset, batch_size=None, num_workers=0)
 
     del configs
@@ -63,7 +74,7 @@ def main():
     fn = os.path.join(args.result_dir, 'wav.scp')
     f = open(fn, 'w')
     with torch.no_grad():
-        for batch_idx, batch in tqdm(enumerate(test_data_loader)):
+        for _, batch in tqdm(enumerate(test_data_loader)):
             utts = batch["utts"]
             assert len(utts) == 1, "inference mode only support batchsize 1"
             text = batch["text"]

@@ -11,9 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import print_function
-import os,sys
-os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "gloo"
 import argparse
 import datetime
 import logging
@@ -22,12 +21,12 @@ from copy import deepcopy
 import torch
 import torch.distributed as dist
 import deepspeed
-
+import os,sys
+os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "gloo"
 now_dir = os.getcwd()
 sys.path.append(now_dir)
 sys.path.append("%s/cosyvoice" % (now_dir))
-
-from hyperpyyaml import load_hyperpyyaml
+  from hyperpyyaml import load_hyperpyyaml
 
 from torch.distributed.elastic.multiprocessing.errors import record
 
@@ -57,7 +56,7 @@ def get_args():
                         help='tensorboard log dir')
     parser.add_argument('--ddp.dist_backend',
                         dest='dist_backend',
-                        default='gloo',
+                        default='nccl',
                         choices=['nccl', 'gloo'],
                         help='distributed backend')
     parser.add_argument('--num_workers',
@@ -72,13 +71,17 @@ def get_args():
                         action='store_true',
                         default=False,
                         help='Use pinned memory buffers used for reading')
+    parser.add_argument('--use_amp',
+                        action='store_true',
+                        default=False,
+                        help='Use automatic mixed precision training')
     parser.add_argument('--deepspeed.save_states',
                         dest='save_states',
                         default='model_only',
                         choices=['model_only', 'model+optimizer'],
                         help='save model/optimizer states')
     parser.add_argument('--timeout',
-                        default=30,
+                        default=60,
                         type=int,
                         help='timeout (in seconds) of cosyvoice_join.')
     parser = deepspeed.add_config_arguments(parser)
@@ -136,6 +139,7 @@ def main():
         group_join = dist.new_group(backend="gloo", timeout=datetime.timedelta(seconds=args.timeout))
         executor.train_one_epoc(model, optimizer, scheduler, train_data_loader, cv_data_loader, writer, info_dict, group_join)
         dist.destroy_process_group(group_join)
+
 
 if __name__ == '__main__':
     main()
