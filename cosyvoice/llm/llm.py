@@ -83,12 +83,17 @@ class TransformerLM(nn.Module):
     def pad_unpad_sequence(self, sos_eos_emb, embedding, text_token, text_token_len, task_id_emb, speech_token, speech_token_len):
         text_token = unpad_sequence(text_token, text_token_len.cpu(), batch_first=True)
         speech_token = unpad_sequence(speech_token, speech_token_len.cpu(), batch_first=True)
-        lm_input = [torch.cat([sos_eos_emb.squeeze(dim=0), embedding[i], text_token[i], task_id_emb.squeeze(dim=0), speech_token[i]], dim=0) for i in range(len(text_token))]
+        lm_input = [torch.cat([sos_eos_emb.squeeze(dim=0), embedding[i], text_token[i], task_id_emb.squeeze(dim=0), speech_token[i]], dim=0)
+                    for i in range(len(text_token))]
         lm_input_len = torch.tensor([i.size(0) for i in lm_input], dtype=torch.int32)
         lm_input = pad_sequence(lm_input, batch_first=True, padding_value=IGNORE_ID)
         return lm_input, lm_input_len
 
-    def forward(self, batch: dict, device: torch.device) -> Dict[str, Optional[torch.Tensor]]:
+    def forward(
+            self,
+            batch: dict,
+            device: torch.device,
+    ) -> Dict[str, Optional[torch.Tensor]]:
         """
         Args:
             text: (B, L, D)

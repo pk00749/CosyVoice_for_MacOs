@@ -11,7 +11,7 @@ sys.path.append(f'{ROOT_DIR}/third_party/Matcha-TTS')
 # check speaker
 print("List out speaker:")
 cosyvoice = CosyVoice('pretrained_models/CosyVoice-300M')
-print(cosyvoice.list_avaliable_spks())
+print(cosyvoice.list_available_spks())
 
 # sft usage
 print("===== inference sft usage =====")

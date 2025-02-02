@@ -89,6 +89,13 @@ class ConditionalCFM(BASECFM):
         # Or in future might add like a return_all_steps flag
         sol = []
 
+        # # Do not use concat, it may cause memory format changed and trt infer with wrong results!
+        # x_in = torch.zeros([2, 80, x.size(2)], device=x.device, dtype=x.dtype)
+        # mask_in = torch.zeros([2, 1, x.size(2)], device=x.device, dtype=x.dtype)
+        # mu_in = torch.zeros([2, 80, x.size(2)], device=x.device, dtype=x.dtype)
+        # t_in = torch.zeros([2], device=x.device, dtype=x.dtype)
+        # spks_in = torch.zeros([2, 80], device=x.device, dtype=x.dtype)
+        # cond_in = torch.zeros([2, 80, x.size(2)], device=x.device, dtype=x.dtype)
         for step in range(1, len(t_span)):
             dphi_dt = self.estimator(x, mask, mu, t, spks, cond)
             # Classifier-Free Guidance inference introduced in VoiceBox

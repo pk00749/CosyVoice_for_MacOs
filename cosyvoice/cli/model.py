@@ -1,5 +1,16 @@
-#!/usr/bin/env python
-#coding=utf-8
+# Copyright (c) 2024 Alibaba Inc (authors: Xiang Lyu)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import os
 from typing import Generator
 import torch
@@ -9,6 +20,9 @@ import time
 from torch.nn import functional as F
 from contextlib import nullcontext
 import uuid
+from cosyvoice.utils.common import fade_in_out
+from cosyvoice.utils.file_utils import convert_onnx_to_trt
+
 
 class CosyVoiceModel:
 
@@ -16,16 +30,50 @@ class CosyVoiceModel:
                  llm: torch.nn.Module,
                  flow: torch.nn.Module,
                  hift: torch.nn.Module):
+                #  fp16: bool):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.llm = llm
         self.flow = flow
         self.hift = hift
+        # self.fp16 = fp16
+        # self.llm.fp16 = fp16
+        # self.flow.fp16 = fp16
+        # if self.fp16 is True:
+        #     self.llm.half()
+        #     self.flow.half()
+        # self.token_min_hop_len = 2 * self.flow.input_frame_rate
+        # self.token_max_hop_len = 4 * self.flow.input_frame_rate
+        # self.token_overlap_len = 20
+        # # here we fix set flow.decoder.estimator.static_chunk_size = 0 for compatibability
+        # self.flow.decoder.estimator.static_chunk_size = 0
+        # # mel fade in out
+        # self.mel_overlap_len = int(self.token_overlap_len / self.flow.input_frame_rate * 22050 / 256)
+        # self.mel_window = np.hamming(2 * self.mel_overlap_len)
+        # # hift cache
+        # self.mel_cache_len = 20
+        # self.source_cache_len = int(self.mel_cache_len * 256)
+        # # speech fade in out
+        # self.speech_window = np.hamming(2 * self.source_cache_len)
+        # # rtf and decoding related
+        # self.stream_scale_factor = 1
+        # assert self.stream_scale_factor >= 1, 'stream_scale_factor should be greater than 1, change it according to your actual rtf'
+        # self.llm_context = torch.cuda.stream(torch.cuda.Stream(self.device)) if torch.cuda.is_available() else nullcontext()
+        # self.lock = threading.Lock()
+        # # dict used to store session related variable
+        # self.tts_speech_token_dict = {}
+        # self.llm_end_dict = {}
+        # self.mel_overlap_dict = {}
+        # self.flow_cache_dict = {}
+        # self.hift_cache_dict = {}
 
     def load(self, llm_model, flow_model, hift_model):
-        self.llm.load_state_dict(torch.load(llm_model, map_location=self.device))
+        self.llm.load_state_dict(torch.load(llm_model, map_location=self.device)) #, strict=True)
         self.llm.to(self.device).eval()
-        self.flow.load_state_dict(torch.load(flow_model, map_location=self.device))
+        self.flow.load_state_dict(torch.load(flow_model, map_location=self.device)) #, strict=True)
         self.flow.to(self.device).eval()
+        # in case hift_model is a hifigan model
+        # hift_state_dict = {k.replace('generator.', ''): v for k, v in torch.load(hift_model, map_location=self.device).items()}
+        # self.hift.load_state_dict(hift_state_dict, strict=True)
         self.hift.load_state_dict(torch.load(hift_model, map_location=self.device))
         self.hift.to(self.device).eval()
 

@@ -14,9 +14,9 @@
 # limitations under the License.
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import onnxruntime
 import torch
 import torchaudio
-import onnxruntime
 import torchaudio.compliance.kaldi as kaldi
 # from tqdm import tqdm
 

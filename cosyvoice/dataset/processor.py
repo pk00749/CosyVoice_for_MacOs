@@ -357,7 +357,7 @@ def batch(data, batch_type='static', batch_size=16, max_frames_in_batch=12000, m
             logging.fatal('Unsupported batch type {}'.format(batch_type))
 
 
-def padding(data, use_spk_embedding, mode='train'):
+def padding(data, use_spk_embedding, mode='train', gan=False):
     """ Padding the data into training data
 
         Args:
