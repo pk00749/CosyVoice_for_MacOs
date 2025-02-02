@@ -32,10 +32,10 @@ from cosyvoice.transformer.attention import (MultiHeadedAttention,
                                              RelPositionMultiHeadedAttention)
 from cosyvoice.transformer.embedding import EspnetRelPositionalEncoding
 from cosyvoice.transformer.subsampling import LegacyLinearNoSubsampling
-from cosyvoice.llm.llm import TransformerLM#, Qwen2LM
-from cosyvoice.flow.flow import MaskedDiffWithXvec#, CausalMaskedDiffWithXvec
+from cosyvoice.llm.llm import TransformerLM, Qwen2LM
+from cosyvoice.flow.flow import MaskedDiffWithXvec, CausalMaskedDiffWithXvec
 from cosyvoice.hifigan.generator import HiFTGenerator
-from cosyvoice.cli.model import CosyVoiceModel#, CosyVoice2Model
+from cosyvoice.cli.model import CosyVoiceModel, CosyVoice2Model
 
 
 COSYVOICE_ACTIVATION_CLASSES = {
